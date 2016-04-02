@@ -1,8 +1,8 @@
 /* This file is part of z10-infodisplay, which is free software and is licensed
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
+#include "display/Screen.hpp"
 
-#include <g15daemon_client.h>
 #include <unistd.h>
 
 extern "C"{
@@ -14,50 +14,6 @@ extern "C"{
 #include <iostream>
 using namespace std;
 
-namespace G15{
-	
-	constexpr char BLACK = 1;
-	constexpr char WHITE = 0;
-
-class Canvas{
-	public:
-		char canvas[G15_WIDTH*G15_HEIGHT];
-		
-	public:
-		auto operator[](int iy){ return canvas + G15_WIDTH*iy; }
-		
-		static constexpr auto width  = G15_WIDTH;
-		static constexpr auto height = G15_HEIGHT;
-		
-		void lineHor( int y, int x, int width, char color=BLACK ){
-			for( int i=0; i<width; i++ )
-				(*this)[y][x+i] = color;
-		}
-		void rectangle( int y, int x, int height, int width, char color=BLACK ){
-			for( int i=0; i<height; i++ )
-				lineHor( y+i, x, width, color );
-		}
-		
-		void fill( char color=WHITE ){
-			for( auto& pix : canvas )
-				pix = color;
-		}
-};
-
-class Screen{
-	private:
-		int handle;
-		
-	public:
-		Screen() : handle( new_g15_screen( G15_PIXELBUF ) ) { }
-		Screen( const Screen& ) = delete;
-		~Screen(){ g15_close_screen( handle ); }
-		
-		void sendCanvas( Canvas& c )
-			{ g15_send( handle, c.canvas, G15_WIDTH*G15_HEIGHT ); }
-};
-
-}
 
 struct Stat{
 	guint64 total  { 0 };
@@ -101,12 +57,13 @@ int main( int argc, char* argv[] ){
 	for(int j=0; j<20; j++){
 		canvas.fill();
 		
+		canvas.rectangle( {0,0}, 102, cores*5+2 );
 		for( int i=0; i<cores; i++ ){
 			glibtop_cpu info;
 			glibtop_get_cpu( &info );
 			
 			Stat cpu( info, i );
-			canvas.rectangle( 10+5*i, 0, 5, int(cpu.cpuPercentage(prev[i])*100) );
+			canvas.rectangleFilled( {2, 2+5*i}, cpu.cpuPercentage(prev[i])*100, 4 );
 			prev[i] = cpu;
 		}
 		

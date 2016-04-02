@@ -10,6 +10,7 @@ static char doMerge( char value, Color color, Merge merge ){
 		case Merge::AND : return wanted & value;
 		case Merge::OR  : return wanted | value;
 		case Merge::XOR : return wanted ^ value;
+		default: exit(-1);
 	};
 }
 
@@ -60,11 +61,21 @@ void Canvas::line( Point from, Point to, Color color, Merge merge ){
 }
 
 void Canvas::rectangle( Point top_left, int width, int height, Color color, Merge merge ){
-	
+	int x = top_left.x, y = top_left.y;
+	if( height > 1 && width > 1 ){ //Avoid the case were some of the lines would overlap
+		line( {x      , y       },  {x+width, y         }, color, merge );
+		line( {x      , y+height},  {x+width, y+height  }, color, merge );
+		
+		line( {x      , y+1     },  {x      , y+height-1}, color, merge );
+		line( {x+width, y+1     },  {x+width, y+height-1}, color, merge );
+	}
+	else //Draw a filled rectangle as it doesn't contain any whitespace
+		rectangleFilled( top_left, width, height, color, merge );
 }
 
 void Canvas::rectangleFilled( Point top_left, int width, int height, Color color, Merge merge ){
-	
+	for( int iy=0; iy<height; iy++ )
+		line( {top_left.x, iy+top_left.y}, {top_left.x+width-1, iy+top_left.y}, color, merge );
 }
 
 void Canvas::elipse( Point center, int horizontal_radius, int vertical_radius, Color color, Merge merge ){
