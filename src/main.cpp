@@ -16,34 +16,19 @@ using namespace std;
 
 
 struct Stat{
-	guint64 total  { 0 };
-	guint64 user   { 0 };
-	guint64 nice   { 0 };
-	guint64 sys    { 0 };
-	guint64 idle   { 0 };
-	guint64 iowait { 0 };
-	guint64 irq    { 0 };
-	guint64 softirq{ 0 };
+	//http://stackoverflow.com/a/23376195
+	guint64 non_idle{ 0 };
+	guint64 total{ 0 };
 	
 	Stat() = default;
-	Stat( glibtop_cpu info )
-		:	total(info.total), user(info.user), nice(info.user), sys(info.sys), idle(info.idle)
-		,	iowait(info.iowait), irq(info.irq), softirq(info.softirq)
-		{ }
 	
 	Stat( glibtop_cpu info, int id )
-		:	total(info.xcpu_total[id]), user(info.xcpu_user[id]), nice(info.xcpu_user[id])
-		,	sys(info.xcpu_sys[id]), idle(info.xcpu_idle[id]) , iowait(info.xcpu_iowait[id])
-		,	irq(info.xcpu_irq[id]), softirq(info.xcpu_softirq[id])
+		:	non_idle( info.xcpu_user[id] + info.xcpu_nice[id] + info.xcpu_sys[id] + info.xcpu_irq[id] + info.xcpu_softirq[id] )
+		,	total( info.xcpu_idle[id] + info.xcpu_iowait[id] + non_idle )
 		{ }
 	
-	//http://stackoverflow.com/a/23376195
-	auto idle2()   const { return idle + iowait; }
-	auto nonIdle() const { return user + nice + sys + irq + softirq; }
-	auto total2()  const { return idle2() + nonIdle(); }
-	
 	auto cpuPercentage( Stat prev ) const
-		{ return (nonIdle() - prev.nonIdle()) / double(total2() - prev.total2());  }
+		{ return (non_idle - prev.non_idle) / double(total - prev.total);  }
 };
 
 int main( int argc, char* argv[] ){
