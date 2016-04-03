@@ -26,9 +26,16 @@ struct Stat{
 		:	non_idle( info.xcpu_user[id] + info.xcpu_nice[id] + info.xcpu_sys[id] + info.xcpu_irq[id] + info.xcpu_softirq[id] )
 		,	total( info.xcpu_idle[id] + info.xcpu_iowait[id] + non_idle )
 		{ }
+	Stat( int id ){
+		glibtop_cpu info;
+		glibtop_get_cpu( &info );
+		*this = Stat( info, id );
+	}
 	
-	auto cpuPercentage( Stat prev ) const
-		{ return (non_idle - prev.non_idle) / double(total - prev.total);  }
+	auto cpuPercentage( Stat prev ) const{
+		auto total_diff = total - prev.total;
+		return total_diff == 0 ? 0.0 : (non_idle - prev.non_idle) / double(total_diff);
+	}
 };
 
 int main( int argc, char* argv[] ){
@@ -38,17 +45,21 @@ int main( int argc, char* argv[] ){
 	G15::Canvas canvas;
 	
 	auto cores = 4; //TODO:
+	auto width = std::max( 16/cores, 2 );
+	auto height = canvas.height-1;
 	Stat prev[cores];
-	for(int j=0; j<20; j++){
+	for( int i=0; i<cores; i++ )
+		prev[i] = Stat( i );
+	
+	for(int j=0; j<10; j++){
 		canvas.fill();
 		
-		canvas.rectangle( {0,0}, 102, cores*5+2 );
+		canvas.rectangle( {0,0}, cores*width+2, height );
 		for( int i=0; i<cores; i++ ){
-			glibtop_cpu info;
-			glibtop_get_cpu( &info );
+			Stat cpu( i );
+			auto amount = int(cpu.cpuPercentage(prev[i]) * (height-3));
+			canvas.rectangleFilled( {2+width*i, height-amount-1}, width-1, amount );
 			
-			Stat cpu( info, i );
-			canvas.rectangleFilled( {2, 2+5*i}, cpu.cpuPercentage(prev[i])*100, 4 );
 			prev[i] = cpu;
 		}
 		
