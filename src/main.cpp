@@ -3,6 +3,7 @@
 
 #include "display/Screen.hpp"
 
+#include <sys/time.h>
 #include <unistd.h>
 
 extern "C"{
@@ -81,6 +82,26 @@ void drawNumber( G15::Canvas& canvas, G15::Point pos, int number ){
 	}
 }
 
+void drawNumberText( G15::Canvas& canvas, G15::Point pos, std::string text ){
+	for( auto character : text ){
+		drawNumber( canvas, pos, character-'0' );
+		pos = {pos.x+12, pos.y};
+	}
+}
+
+void drawCurrentTime( G15::Canvas& canvas, G15::Point pos ){
+	auto t = time( nullptr );
+	auto tm = localtime( &t );
+	auto number = []( int num ) {
+		auto str = std::to_string( num );
+		if( str.size() > 1 )
+			return str;
+		return std::string( "00" ).replace( 2-str.size(), str.size(), str );
+	};
+	
+	drawNumberText( canvas, pos, number( tm->tm_hour ) + ":" + number( tm->tm_min ) + ":" + number( tm->tm_sec ) );
+}
+
 int main( int argc, char* argv[] ){
 	glibtop_init();
 	
@@ -94,7 +115,8 @@ int main( int argc, char* argv[] ){
 	for( int i=0; i<cores; i++ )
 		prev[i] = Stat( i );
 	
-	for(int j=0; j<10; j++){
+//	for(int j=0; j<10; j++){
+	while(true){
 		canvas.fill();
 		
 		canvas.rectangle( {0,0}, cores*width+2, height );
@@ -106,11 +128,11 @@ int main( int argc, char* argv[] ){
 			prev[i] = cpu;
 		}
 		
-		drawNumber( canvas, {30,0}, j );
+		drawCurrentTime( canvas, {30,0} );
 		
 		screen.sendCanvas( canvas );
 		
-		usleep( 500000 );
+		usleep( 1000000 );
 	}
 	
 	glibtop_close();
