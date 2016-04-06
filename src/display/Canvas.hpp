@@ -26,14 +26,21 @@ template<int MAX, int MIN=0>
 struct Limited{
 	int val;
 	
-	Limited( int value ) : val(value)
+	void validate()
 #ifdef NDEBUG
 		{}
 #else
 		{ assert( val >=0 && val < MAX ); }
 #endif
 	
+	Limited( int value ) : val(value) { validate(); }
+	
 	operator int() const{ return val; }
+	Limited& operator=( const Limited& other ){
+		val = other.val;
+		return *this;
+	}
+	Limited& operator=( int value ) { return *this = Limited( value ); }
 };
 
 class Point{

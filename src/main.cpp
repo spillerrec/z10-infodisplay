@@ -12,6 +12,7 @@ extern "C"{
 }
 
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
 
@@ -38,6 +39,48 @@ struct Stat{
 	}
 };
 
+void drawBar( G15::Canvas& canvas, G15::Point p, bool mirror, bool rotate ){
+	auto offset_m = mirror ? 7 : 1;
+	auto offset_p = mirror ? 8 : 0;
+	
+	if( rotate ){
+		canvas.line( {p.x+1, p.y+offset_p}, {p.x+7, p.y+offset_p} );
+		canvas.line( {p.x+2, p.y+offset_m}, {p.x+6, p.y+offset_m} );
+	}
+	else{
+		canvas.line( {p.x+offset_p, p.y+1}, {p.x+offset_p, p.y+7} );
+		canvas.line( {p.x+offset_m, p.y+2}, {p.x+offset_m, p.y+6} );
+	}
+}
+
+void drawNumber( G15::Canvas& canvas, G15::Point pos, int number ){
+	G15::Point offset{ pos.x, pos.y+8 };
+	auto leftHigh  = [&](){ drawBar( canvas, pos,    false, false ); };
+	auto rightHigh = [&](){ drawBar( canvas, pos,    true , false ); };
+	auto leftLow   = [&](){ drawBar( canvas, offset, false, false ); };
+	auto rightLow  = [&](){ drawBar( canvas, offset, true , false ); };
+	auto top       = [&](){ drawBar( canvas, pos,    false, true  ); };
+	auto bottom    = [&](){ drawBar( canvas, offset, true , true  ); };
+	auto middle    = [&](){
+		drawBar( canvas, pos,    true , true  );
+		drawBar( canvas, offset, false, true  );
+	};
+	
+	switch( number ){
+		case 0: leftHigh(); rightHigh(); leftLow(); rightLow(); top(); bottom(); break;
+		case 1: rightHigh(); rightLow(); break;
+		case 2: top(); middle(); bottom(); rightHigh(); leftLow(); break;
+		case 3: top(); middle(); bottom(); rightHigh(); rightLow(); break;
+		case 4: middle(); leftHigh(); rightHigh(); rightLow(); break;
+		case 5: top(); middle(); bottom(); rightLow();  leftHigh(); break;
+		case 6: leftHigh(); leftLow(); rightLow(); top(); bottom(); middle(); break;
+		case 7: rightHigh(); rightLow(); top(); break;
+		case 8: leftHigh(); rightHigh(); leftLow(); rightLow(); top(); bottom(); middle(); break;
+		case 9: leftHigh(); rightHigh(); rightLow(); top(); bottom(); middle(); break;
+		default: middle(); break;
+	}
+}
+
 int main( int argc, char* argv[] ){
 	glibtop_init();
 	
@@ -62,6 +105,8 @@ int main( int argc, char* argv[] ){
 			
 			prev[i] = cpu;
 		}
+		
+		drawNumber( canvas, {30,0}, j );
 		
 		screen.sendCanvas( canvas );
 		
