@@ -2,6 +2,7 @@
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
 #include "display/Screen.hpp"
+#include "info/Audio.hpp"
 
 #include <sys/time.h>
 #include <unistd.h>
@@ -107,6 +108,7 @@ int main( int argc, char* argv[] ){
 	
 	G15::Screen screen;
 	G15::Canvas canvas;
+	Audio a;
 	
 	auto cores = 4; //TODO:
 	auto width = std::max( 16/cores, 2 );
@@ -131,6 +133,7 @@ int main( int argc, char* argv[] ){
 		drawCurrentTime( canvas, {30,0} );
 		
 		screen.sendCanvas( canvas );
+		a.update();
 		
 		usleep( 1000000 );
 	}
