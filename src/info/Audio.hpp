@@ -11,10 +11,8 @@
 struct CallbackTest{
 	int stuff;
 	
-	void stateCallback( pa_context* ){
-		std::cout << "Something happened!\n";
-		//std::cout << text << std::endl;
-	}
+	void stateCallback( pulse::Context context );
+	void sinkInfoListCallback( pulse::Context, const pa_sink_info *i, int eol );
 };
 
 class Audio{
