@@ -3,6 +3,8 @@
 
 #include "Canvas.hpp"
 
+#include <cmath>
+
 using namespace G15;
 
 static char doMerge( char value, Color color, Merge merge ){
@@ -82,6 +84,69 @@ void Canvas::rectangleFilled( Point top_left, int width, int height, Color color
 
 void Canvas::elipse( Point center, int horizontal_radius, int vertical_radius, Color color, Merge merge ){
 	
+	if( horizontal_radius == 0 ){
+		if( vertical_radius == 0 )
+			point( center, color, merge );
+		else
+			line( {center.x, center.y-vertical_radius}, {center.x, center.y+vertical_radius}, color, merge );
+	}
+	else if( vertical_radius == 0 ){
+		line( {center.x-horizontal_radius, center.y}, {center.x+horizontal_radius, center.y}, color, merge );
+	}
+	else{
+		//Find the point (P) where the tangent is at a 45 deg angle
+		double v = atan( (double)vertical_radius / horizontal_radius );
+		int Px = horizontal_radius * cos( v ) + 0.5;
+		int Py_start = vertical_radius * sin( acos( (double)Px/horizontal_radius ) ) + 0.5;
+		int Py;// = vertical_radius * sin( v ) + 0.5;
+		
+		//Draw ellipse path from left to P iterating with x-coordinates
+		for( int i=0; i<=Px; i++ ){
+			double angle = acos( (double)i/horizontal_radius );
+			Py = vertical_radius * sin( angle ) + 0.5;
+			
+				if( Py ){
+					if( i ){
+						point( {center.x+i, center.y+Py}, color, merge );
+						point( {center.x-i, center.y+Py}, color, merge );
+						point( {center.x+i, center.y-Py}, color, merge );
+						point( {center.x-i, center.y-Py}, color, merge );
+					}
+					else{
+						point( {center.x, center.y+Py}, color, merge );
+						point( {center.x, center.y-Py}, color, merge );
+					}
+				}
+				else{
+					point( {center.x-i, center.y}, color, merge );
+					point( {center.x+i, center.y}, color, merge );
+				}
+		}
+		
+		
+		//*Draw ellipse path from P and down iterating with y-coordinates
+		for( int i=Py_start-1; i>=0; i-- ){ //This should be Py-1 to prevent overlap
+			double angle = asin( (double)i/vertical_radius );
+			int dx = horizontal_radius * cos( angle ) + 0.5;
+			
+				if( dx ){
+					if( i ){
+						point( {center.x+dx, center.y+i}, color, merge );
+						point( {center.x+dx, center.y-i}, color, merge );
+						point( {center.x-dx, center.y+i}, color, merge );
+						point( {center.x-dx, center.y-i}, color, merge );
+					}
+					else{
+						point( {center.x+dx, center.y}, color, merge );
+						point( {center.x-dx, center.y}, color, merge );
+					}
+				}
+				else{
+					point( {center.x, center.y+i}, color, merge );
+					point( {center.x, center.y-i}, color, merge );
+				}
+		}
+	}
 }
 
 void Canvas::elipseFilled( Point center, int horizontal_radius, int vertical_radius, Color color, Merge merge ){
