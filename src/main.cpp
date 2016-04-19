@@ -90,6 +90,24 @@ void drawNumberText( G15::Canvas& canvas, G15::Point pos, std::string text ){
 	}
 }
 
+void drawClock( G15::Canvas& canvas, G15::Point pos ){
+	auto t = time( nullptr );
+	auto tm = localtime( &t );
+	
+	auto edgePos = [&]( double percent, double lenght ){
+			auto pi = 3.14; //TODO:
+			auto angle = (1.0-percent) * 2*pi + pi;
+			return G15::Point(
+					pos.x + sin( angle ) * lenght
+				,	pos.y + cos( angle ) * lenght
+				);
+		};
+	canvas.elipse( pos, 10, 10 );
+	
+	canvas.line( pos, edgePos( tm->tm_min  / 60.0,  8 ) );
+	canvas.line( pos, edgePos( tm->tm_hour / 24.0,  4 ) );
+}
+
 void drawCurrentTime( G15::Canvas& canvas, G15::Point pos ){
 	auto t = time( nullptr );
 	auto tm = localtime( &t );
@@ -131,6 +149,7 @@ int main( int argc, char* argv[] ){
 		}
 		
 		drawCurrentTime( canvas, {30,0} );
+		drawClock( canvas, {148,30} );
 		
 		screen.sendCanvas( canvas );
 		a.update();
