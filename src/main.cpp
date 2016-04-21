@@ -55,6 +55,13 @@ void drawBar( G15::Canvas& canvas, G15::Point p, bool mirror, bool rotate ){
 	}
 }
 
+void drawDot( G15::Canvas& canvas, G15::Point p ){
+	canvas.rectangleFilled( {p.x+2, p.y+2}, 4, 4 );
+	G15::Point offsets[] = { {0,0}, {0,3}, {3,0}, {3,3} };
+	for( auto offset : offsets )
+		canvas.point( {p.x+2+offset.x, p.y+2+offset.y}, G15::Color::BLACK, G15::Merge::XOR );
+}
+
 void drawNumber( G15::Canvas& canvas, G15::Point pos, int number ){
 	G15::Point offset{ pos.x, pos.y+8 };
 	auto leftHigh  = [&](){ drawBar( canvas, pos,    false, false ); };
@@ -79,7 +86,7 @@ void drawNumber( G15::Canvas& canvas, G15::Point pos, int number ){
 		case 7: rightHigh(); rightLow(); top(); break;
 		case 8: leftHigh(); rightHigh(); leftLow(); rightLow(); top(); bottom(); middle(); break;
 		case 9: leftHigh(); rightHigh(); rightLow(); top(); bottom(); middle(); break;
-		default: middle(); break;
+		default: drawDot( canvas, pos ); drawDot( canvas, offset ); break;
 	}
 }
 
